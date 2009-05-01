@@ -37,5 +37,53 @@ import os
 import unittest
 
 class scan:
-    def __init__(self, dirname, reporttype=1):
+    confFile = 0
+    lines = 0
+    luffaProjectEnv = {}
+    luffaLicenseEnv = {}
+    luffaWatchlistEnv = {}
+    luffaReportEnv = {}
+
+    def __init__(self):
         print "Scanning"
+    def initEnv(self, projectConf):
+        confFile = open(projectConf, 'rU')
+        lines = confFile.readlines()
+        if confFile:
+            # read it in
+            print confFile
+            for line in lines:
+                # Discard comments
+                # split each line into key, tuple
+                if line[0].find("#", 0) == -1:
+                    line = line.split('=')
+                    if line[0].find("project") > -1:
+                        self.luffaProjectEnv[line[0]] = line[1]
+                    elif line[0].find("license") > -1:
+                        self.luffaLicenseEnv[line[0]] = line[1]
+                    elif line[0].find("watchlist") > -1:
+                       self.luffaWatchlistEnv[line[0]] = line[1]
+                    elif line[0].find("report") > -1:
+                       self.luffaReportEnv[line[0]] = line[1]
+                    else:
+                       print "Ignoring env property %s" % line
+            confFile.close()
+        else:
+            print "Error: Cannot open file $s" % siteFile
+        return (len(self.luffaLicenseEnv) + len(self.luffaWatchlistEnv) + len(self.luffaProjectEnv) + len(self.luffaReportEnv))
+class scanTests(unittest.TestCase):
+    def setUp(self):
+        print "Setting up"
+        self.aLuffa = scan()
+    def testInitEnv(self):
+        self.assert_(self)
+        print os.path.abspath('.')
+        propsRead = self.aLuffa.initEnv("../../../../examples/luffaproject.conf")
+        self.assert_(propsRead > 0)
+        self.assert_(self.aLuffa.luffaProjectEnv)
+        self.assert_(self.aLuffa.luffaProjectEnv.get('project.fullname'))
+        print "# of props read=%d" % propsRead
+    def tearDown(self):
+        print "tearing down"
+if __name__ == '__main__':
+    unittest.main()

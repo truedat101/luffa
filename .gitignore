@@ -1,6 +1,9 @@
 *~
 .*~
-.*swp
+*.*swp
+*.*swo
+*.pyc
 #*#
 .DS_Store
 .project
+.pydevproject
