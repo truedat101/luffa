@@ -71,6 +71,13 @@ class scan:
         else:
             print "Error: Cannot open file $s" % siteFile
         return (len(self.luffaLicenseEnv) + len(self.luffaWatchlistEnv) + len(self.luffaProjectEnv) + len(self.luffaReportEnv))
+    def deepScan(self):
+        relPath = self.luffaProjectEnv.get('project.path.uri').rstrip('\n')
+#absPath = os.path.abspath(relPath)
+        print "deep scan on files under %s" % relPath
+        files = os.listdir(relPath)
+        for f in files:
+            print "initiating scan on ----->%s" % f
 class scanTests(unittest.TestCase):
     def setUp(self):
         print "Setting up"
@@ -83,6 +90,9 @@ class scanTests(unittest.TestCase):
         self.assert_(self.aLuffa.luffaProjectEnv)
         self.assert_(self.aLuffa.luffaProjectEnv.get('project.fullname'))
         print "# of props read=%d" % propsRead
+    def testDeepScan1(self):
+        propsRead = self.aLuffa.initEnv("../../../../examples/luffaproject.conf")
+        self.aLuffa.deepScan()
     def tearDown(self):
         print "tearing down"
 if __name__ == '__main__':
