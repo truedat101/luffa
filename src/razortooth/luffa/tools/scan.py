@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import sys
 import os
 import unittest
+import string
 
 class scan:
     confFile = 0
@@ -71,13 +72,16 @@ class scan:
         else:
             print "Error: Cannot open file $s" % siteFile
         return (len(self.luffaLicenseEnv) + len(self.luffaWatchlistEnv) + len(self.luffaProjectEnv) + len(self.luffaReportEnv))
-    def deepScan(self):
-        relPath = self.luffaProjectEnv.get('project.path.uri').rstrip('\n')
-#absPath = os.path.abspath(relPath)
-        print "deep scan on files under %s" % relPath
-        files = os.listdir(relPath)
-        for f in files:
-            print "initiating scan on ----->%s" % f
+    def deepScan(self, currentPath):
+        print "deep scanning %s" % os.path.abspath(currentPath)
+        if (os.path.isdir(os.path.abspath(currentPath))):
+            files = os.listdir(currentPath)
+            print "deep scan found %d files" % len(files)
+            for f in files:
+                self.deepScan(os.path.realpath(f))
+        else:
+            print "initiating scan on ----->%s" % currentPath
+            # Implement the various scans
 class scanTests(unittest.TestCase):
     def setUp(self):
         print "Setting up"
@@ -92,7 +96,7 @@ class scanTests(unittest.TestCase):
         print "# of props read=%d" % propsRead
     def testDeepScan1(self):
         propsRead = self.aLuffa.initEnv("../../../../examples/luffaproject.conf")
-        self.aLuffa.deepScan()
+        self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
     def tearDown(self):
         print "tearing down"
 if __name__ == '__main__':
