@@ -83,11 +83,16 @@ class scan:
                 # print "about to deep scan %s" % os.path.join(currentPath, f)
                 self.deepScan(os.path.join(currentPath, f))
         else:
-            print "initiating scan on ----->%s" % currentPath
-            afile = open(os.path.abspath(currentPath), 'rU')
-            for line in afile:
-                print "read line: %s" % line
-            # Implement the various scans
+            extList = self.luffaProjectEnv.get("project.source.ext.whitelist")
+            for ext in extList: # Convert this to a regex, more efficient
+                if (currentPath.endswith(ext)):
+                    print "initiating scan on ----->%s" % currentPath
+                    afile = open(currentPath, 'rU')
+                    for line in afile:
+                        print "read line: %s" % line
+                        # Implement the various scans
+                else:
+                    print "skipping file %s" % currentPath
 class scanTests(unittest.TestCase):
     def setUp(self):
         print "Setting up"
