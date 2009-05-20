@@ -73,14 +73,20 @@ class scan:
             print "Error: Cannot open file $s" % siteFile
         return (len(self.luffaLicenseEnv) + len(self.luffaWatchlistEnv) + len(self.luffaProjectEnv) + len(self.luffaReportEnv))
     def deepScan(self, currentPath):
-        print "deep scanning %s" % os.path.abspath(currentPath)
-        if (os.path.isdir(os.path.abspath(currentPath))):
+        currentPath = os.path.abspath(currentPath)
+        print "deep scanning %s" % currentPath
+        if (os.path.isdir(currentPath)):
             files = os.listdir(currentPath)
-            print "deep scan found %d files" % len(files)
+            print "deep scan found %d paths" % len(files)
             for f in files:
-                self.deepScan(os.path.realpath(f))
+                print files
+                # print "about to deep scan %s" % os.path.join(currentPath, f)
+                self.deepScan(os.path.join(currentPath, f))
         else:
             print "initiating scan on ----->%s" % currentPath
+            afile = open(os.path.abspath(currentPath), 'rU')
+            for line in afile:
+                print "read line: %s" % line
             # Implement the various scans
 class scanTests(unittest.TestCase):
     def setUp(self):
