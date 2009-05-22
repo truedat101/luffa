@@ -36,6 +36,7 @@ import sys
 import os
 import unittest
 import string
+import re
 
 class scan:
     confFile = 0
@@ -83,6 +84,7 @@ class scan:
                 # print "about to deep scan %s" % os.path.join(currentPath, f)
                 self.deepScan(os.path.join(currentPath, f))
         else:
+            # XXX TODO Make sure this section handles double byte character encodings
             extList = self.luffaProjectEnv.get("project.source.ext.whitelist")
             for ext in extList.split(","): # Convert this to a regex, more efficient
                 if (currentPath.endswith(ext)): # XXX TODO FIX this to handle upper case
@@ -108,6 +110,15 @@ class scanTests(unittest.TestCase):
     def testDeepScan1(self):
         propsRead = self.aLuffa.initEnv("../../../../examples/luffaproject.conf")
         self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
+    def testWatchlistNames(self):
+        propsRead = self.aLuffa.initEnv("../../../../examples/luffaproject.conf")
+        pattern = self.aLuffa.luffaWatchlistEnv.get('watchlist.names').rstrip()
+        print "loaded watchlist.names pattern = %s" % pattern
+        p = re.compile(r"" + pattern + "", re.IGNORECASE)
+        result1 = p.findall("Mike and David are cool")
+        self.assert_(result1 > 0)
+        print result1
+        self.assert_(len(result1) == 2)
     def tearDown(self):
         print "tearing down"
 if __name__ == '__main__':
