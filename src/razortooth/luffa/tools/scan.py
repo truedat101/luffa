@@ -38,6 +38,10 @@ import unittest
 import string
 import re
 
+# Pattern based on fine work of http://www.regular-expressions.info/email.html, RFC 2822, and your local Audi Dealer
+# I could write these, but we'd have a leaky sieve
+emailRegexPattern = r"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"
+
 class scan:
     confFile = 0
     lines = 0
@@ -95,6 +99,18 @@ class scan:
                         # Implement the various scans
                 else:
                     print "skipping file %s for ext=%s" % (currentPath, ext)
+    def emailScan(self, textString):
+        pattern = self.luffaWatchlistEnv.get('watchlist.emailaddresses').rstrip()
+        print "Loaded email pattern from watchlist.emailaddress %s of length=%d" % (pattern, len(pattern))
+        if ((pattern.find("*",0) == 0) and (len(pattern) == 1)):
+            pattern = emailRegexPattern
+        else:
+            print "Using a custom regex pattern for email"
+        print "loaded watchlist.emailaddresses pattern = %s" % pattern
+        p = re.compile(r"" + pattern + "", re.IGNORECASE)
+        matches = p.findall(textString)
+        return matches
+# XXX Is it even good style to include the tests directly in the library class file
 class scanTests(unittest.TestCase):
     def setUp(self):
         print "Setting up"
@@ -119,6 +135,21 @@ class scanTests(unittest.TestCase):
         self.assert_(result1 > 0)
         print result1
         self.assert_(len(result1) == 2)
+    def testWatchlistCompanies(self):
+        propsRead = self.aLuffa.initEnv("../../../../examples/luffaproject.conf")
+        pattern = self.aLuffa.luffaWatchlistEnv.get('watchlist.companies').rstrip()
+        print "loaded watchlist.companies pattern = %s" % pattern
+        p = re.compile(r"" + pattern + "", re.IGNORECASE)
+        result1 = p.findall("The time has come for Microsoft to fall and for the titans of industry to bow to a new leader, Sun-Micro-Google Inc.")
+        self.assert_(result1 > 0)
+        print result1
+        self.assert_(len(result1) == 3)
+    def testEmailScan(self):
+        propsRead = self.aLuffa.initEnv("../../../../examples/luffaproject.conf")
+        result1 = self.aLuffa.emailScan("Email me at dkords1@go.com if you want to reach my spam bucket.  If you want to try reaching me at dkords at dot com, that won't work, and please never try me at dk.or@d.s or dk@o.rds")
+        self.assert_(result1 > 0)
+        print result1
+        self.assert_(len(result1) == 3)
     def tearDown(self):
         print "tearing down"
 if __name__ == '__main__':
