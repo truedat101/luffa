@@ -51,7 +51,7 @@ class scan:
     luffaReportEnv = {}
 
     def __init__(self):
-        print "Scanning"
+        print "Scanning project"
     def initEnv(self, projectConf):
         confFile = open(projectConf, 'rU')
         lines = confFile.readlines()
@@ -71,42 +71,69 @@ class scan:
                        self.luffaWatchlistEnv[line[0]] = line[1]
                     elif line[0].find("report") > -1:
                        self.luffaReportEnv[line[0]] = line[1]
-                    else:
-                       print "Ignoring env property %s" % line
             confFile.close()
         else:
             print "Error: Cannot open file $s" % siteFile
         return (len(self.luffaLicenseEnv) + len(self.luffaWatchlistEnv) + len(self.luffaProjectEnv) + len(self.luffaReportEnv))
     def deepScan(self, currentPath):
         currentPath = os.path.abspath(currentPath)
-        print "deep scanning %s" % currentPath
         if (os.path.isdir(currentPath)):
             files = os.listdir(currentPath)
-            print "deep scan found %d paths" % len(files)
             for f in files:
                 print files
-                # print "about to deep scan %s" % os.path.join(currentPath, f)
                 self.deepScan(os.path.join(currentPath, f))
         else:
             # XXX TODO Make sure this section handles double byte character encodings
+            # XXX TODO load the regular expressions once, not each file
             extList = self.luffaProjectEnv.get("project.source.ext.whitelist")
             for ext in extList.split(","): # Convert this to a regex, more efficient
-                if (currentPath.endswith(ext)): # XXX TODO FIX this to handle upper case
-                    print "initiating scan on ----->%s, matches ext=%s" % (currentPath, ext)
+                if (currentPath.endswith(ext)): # XXX TODO FIX this to handle upper case, also, this is wrong since it should check all file types in one step
+                    print "--------->initiating scan on %s, matches whitelist extension=%s" % (currentPath, ext)
                     afile = open(currentPath, 'rU')
+                    i = 0
+                    #  Load these during init?
+                    namesPattern = self.luffaWatchlistEnv.get('watchlist.names').rstrip()
+                    companiesPattern = self.luffaWatchlistEnv.get('watchlist.companies').rstrip()
+                    badwordsPattern = self.luffaWatchlistEnv.get('watchlist.badwords').rstrip()
+
+                    print "Loaded Names Scan (pattern=%s)" % (namesPattern)
+                    print "Loaded Companies Scan (pattern=%s)" % (companiesPattern)
+                    print "Loaded Badwords Scan (pattern=%s)" % (badwordsPattern)
+
                     for line in afile:
-                        print "read line: %s" % line
-                        # Implement the various scans
+                        i+=1
+                        # Scan for watchlist.names
+                        p = re.compile(r"" + namesPattern + "", re.IGNORECASE)
+                        result = p.findall(line)
+                        if (len(result) > 0):
+                            print "Flag potential Name issue on line %d" %i + ", found following items:",result[0:len(result)]
+                        # Scan for watchlist.companies
+                        p = re.compile(r"" + companiesPattern + "", re.IGNORECASE)
+                        result = p.findall(line)
+                        if (len(result) > 0):
+                            print "Flag potential Companies issue on line %d" %i + ", found following items:",result[0:len(result)]
+
+                        # Scan for watchlist.badwords
+                        p = re.compile(r"" + badwordsPattern + "", re.IGNORECASE)
+                        result = p.findall(line)
+                        if (len(result) > 0):
+                            print "Flag potential Badword issue on line %d" %i + ", found following items:",result[0:len(result)]
+
+                        # Scan for watchlist.emailaddresses
+                        result = self.emailScan(line)
+                        if (len(result) > 0):
+                            print "Flag potential Emails issue on line %d" %i + ", found following items:",result[0:len(result)]
                 else:
-                    print "skipping file %s for ext=%s" % (currentPath, ext)
+                    print "skipping file non-whitelist file %s" % (currentPath) # Without the regex matching, this will print extra times for each file type not matched
     def emailScan(self, textString):
         pattern = self.luffaWatchlistEnv.get('watchlist.emailaddresses').rstrip()
-        print "Loaded email pattern from watchlist.emailaddress %s of length=%d" % (pattern, len(pattern))
+        # print "Loaded email pattern from watchlist.emailaddress %s of length=%d" % (pattern, len(pattern))
         if ((pattern.find("*",0) == 0) and (len(pattern) == 1)):
             pattern = emailRegexPattern
-        else:
-            print "Using a custom regex pattern for email"
-        print "loaded watchlist.emailaddresses pattern = %s" % pattern
+        # XXX TODO: Move this into init
+        # else:
+        #    print "Using a custom regex pattern for email"
+        # print "loaded watchlist.emailaddresses pattern = %s" % pattern
         p = re.compile(r"" + pattern + "", re.IGNORECASE)
         matches = p.findall(textString)
         return matches
