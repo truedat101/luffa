@@ -95,11 +95,11 @@ class scan:
                     namesPattern = self.luffaWatchlistEnv.get('watchlist.names').rstrip()
                     companiesPattern = self.luffaWatchlistEnv.get('watchlist.companies').rstrip()
                     badwordsPattern = self.luffaWatchlistEnv.get('watchlist.badwords').rstrip()
-
+                    opensourceLicensePattern = self.luffaLicenseEnv.get('license.opensource').rstrip()
                     print "Loaded Names Scan (pattern=%s)" % (namesPattern)
                     print "Loaded Companies Scan (pattern=%s)" % (companiesPattern)
                     print "Loaded Badwords Scan (pattern=%s)" % (badwordsPattern)
-
+                    print "Loaded License Scan (pattern=%s)" % (opensourceLicensePattern)
                     for line in afile:
                         i+=1
                         # Scan for watchlist.names
@@ -123,6 +123,12 @@ class scan:
                         result = self.emailScan(line)
                         if (len(result) > 0):
                             print "Flag potential Emails issue on line %d" %i + ", found following items:",result[0:len(result)]
+
+                        # Scan for license.opensource
+                        p = re.compile(r"" + opensourceLicensePattern + "", re.IGNORECASE)
+                        result = p.findall(line)
+                        if (len(result) > 0):
+                            print "Flag potential Opensource License reference on line %d" %i + ", found following items:",result[0:len(result)]
                 else:
                     print "skipping file non-whitelist file %s" % (currentPath) # Without the regex matching, this will print extra times for each file type not matched
     def emailScan(self, textString):
@@ -168,6 +174,15 @@ class scanTests(unittest.TestCase):
         print "loaded watchlist.companies pattern = %s" % pattern
         p = re.compile(r"" + pattern + "", re.IGNORECASE)
         result1 = p.findall("The time has come for Microsoft to fall and for the titans of industry to bow to a new leader, Sun-Micro-Google Inc.")
+        self.assert_(result1 > 0)
+        print result1
+        self.assert_(len(result1) == 3)
+    def testLicenseOpensource(self):
+        propsRead = self.aLuffa.initEnv("../../../../examples/luffaproject.conf")
+        pattern = self.aLuffa.luffaLicenseEnv.get('license.opensource').rstrip()
+        print "loaded watchlist.companies pattern = %s" % pattern
+        p = re.compile(r"" + pattern + "", re.IGNORECASE)
+        result1 = p.findall("If you use BSD, then you might want to consider an MIT LICENSE, or just jump ahead to GPL.")
         self.assert_(result1 > 0)
         print result1
         self.assert_(len(result1) == 3)
