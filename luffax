@@ -1,225 +1,96 @@
-.TH s3cmd 1
-.SH NAME
-s3cmd \- tool for managing Amazon S3 storage space
-.SH SYNOPSIS
-.B s3cmd
-[\fIOPTIONS\fR] \fICOMMAND\fR [\fIPARAMETERS\fR]
-.SH DESCRIPTION
-.PP
-.B s3cmd
-is a command line client for copying files to/from 
-Amazon S3 (Simple Storage Service) and performing other
-related tasks, for instance creating and removing buckets,
-listing objects, etc.
-.PP
-.B s3cmd
-can do several \fIactions\fR specified by the following \fIcommands\fR.
-.TP
-\fBmb\fR \fIs3://BUCKET\fR
-Make bucket
-.TP
-\fBrb\fR \fIs3://BUCKET\fR
-Remove bucket
-.TP
-\fBls\fR \fI[s3://BUCKET[/PREFIX]]\fR
-List objects or buckets
-.TP
-\fBla\fR
-List all object in all buckets
-.TP
-\fBput\fR \fIFILE [FILE...] s3://BUCKET[/PREFIX]\fR
-Put file into bucket (i.e. upload to S3)
-.TP
-\fBget\fR \fIs3://BUCKET/OBJECT LOCAL_FILE\fR
-Get file from bucket (i.e. download from S3)
-.TP
-\fBdel\fR \fIs3://BUCKET/OBJECT\fR
-Delete file from bucket
-.TP
-\fBsync\fR \fILOCAL_DIR s3://BUCKET[/PREFIX]\fR
-Backup a directory tree to S3
-.TP
-\fBsync\fR \fIs3://BUCKET[/PREFIX] LOCAL_DIR\fR
-Restore a tree from S3 to local directory
-.TP
-\fBinfo\fR \fIs3://BUCKET[/OBJECT]\fR
-Get various information about a Bucket or Object
-.TP
-\fBdu\fR \fI[s3://BUCKET[/PREFIX]]\fR
-Disk usage \- amount of data stored in S3
+#!/usr/bin/env python
+# encoding: utf-8
+#
+#ScanReport.py
+#
+#Created by David J. Kordsmeier on 2009-01-30.
+#Copyright (c) 2009 Razortooth Communications, LLC. All rights reserved.
+#
+#Redistribution and use in source and binary forms, with or without modification,
+#are permitted provided that the following conditions are met:
+#
+#    * Redistributions of source code must retain the above copyright notice,
+#      this list of conditions and the following disclaimer.
+#
+#    * Redistributions in binary form must reproduce the above copyright notice,
+#      this list of conditions and the following disclaimer in the documentation
+#      and/or other materials provided with the distribution.
+#
+#    * Neither the name of Razortooth Communications, LLC, nor the names of its
+#      contributors may be used to endorse or promote products derived from this
+#      software without specific prior written permission.
+#
+#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+#ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+#WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+#DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+#ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+#(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+#LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+#ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+#(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-.SH OPTIONS
-.PP
-Some of the below specified options can have their default 
-values set in 
-.B s3cmd
-config file (by default $HOME/.s3cmd). As it's a simple text file 
-feel free to open it with your favorite text editor and do any
-changes you like.
-.PP
-Config file related options.
-.TP
-\fB\-\-configure\fR
-Invoke interactive (re)configuration tool. Don't worry, you won't 
-lose your settings on subsequent runs.
-.TP
-\fB\-c\fR FILE, \fB\-\-config\fR=FILE
-Config file name. Defaults to $HOME/.s3cfg
-.TP
-\fB\-\-dump\-config\fR
-Dump current configuration after parsing config files
-and command line options and exit.
-.PP
-Most options can have a default value set in the above specified config file.
-.PP
-Options specific to \fBsync\fR command:
-.TP
-\fB\-\-delete\-removed\fR
-Delete remote objects with no corresponding local file when \fIsync\fRing \fBto\fR S3 or delete local files with no corresponding object in S3 when \fIsync\fRing \fBfrom\fR S3.
-.TP
-\fB\-\-no\-delete\-removed\fR
-Don't delete remote objects. Default for 'sync' command.
-.TP
-\fB\-p\fR, \fB\-\-preserve\fR
-Preserve filesystem attributes (mode, ownership, timestamps). Default for 'sync' command.
-.TP
-\fB\-\-no\-preserve\fR
-Don't store filesystem attributes with uploaded files.
-.TP
-\fB\-\-exclude GLOB\fR
-Exclude files matching GLOB (a.k.a. shell-style wildcard) from \fIsync\fI. See SYNC COMMAND section for more information.
-.TP
-\fB\-\-exclude\-from FILE\fR
-Same as \-\-exclude but reads GLOBs from the given FILE instead of expecting them on the command line.
-.TP
-\fB\-\-rexclude REGEXP\fR
-Same as \-\-exclude but works with REGEXPs (Regular expressions).
-.TP
-\fB\-\-rexclude\-from FILE\fR
-Same as \-\-exclude\-from but works with REGEXPs.
-.TP
-\fB\-\-debug\-syncmatch\fR or \fB\-\-debug\-exclude\fR (alias)
-Display detailed information about matching file names against exclude\-rules as well as information about remote vs local filelists matching. S3cmd exits after performing the match and no actual transfer takes place.
-.\".TP
-.\"\fB\-n\fR, \fB\-\-dry\-run\fR
-.\"Only show what would be uploaded or downloaded but don't actually do it. May still perform S3 requests to get bucket listings and other information though.
-.PP
-Options common for all commands (where it makes sense indeed):
-.TP
-\fB\-f\fR, \fB\-\-force\fR
-Force overwrite and other dangerous operations.
-.TP
-\fB\-P\fR, \fB\-\-acl\-public\fR
-Store objects with permissions allowing read for anyone.
-.TP
-\fB\-\-acl\-private\fR
-Store objects with default ACL allowing access for you only.
-.TP
-\fB\-\-bucket\-location\fR=BUCKET_LOCATION
-Specify datacentre where to create the bucket. Possible values are \fIUS\fR (default) or \fIEU\fR.
-.TP
-\fB\-e\fR, \fB\-\-encrypt\fR
-Use GPG encryption to protect stored objects from unauthorized access.
-.TP
-\fB\-m\fR MIME/TYPE, \fB\-\-mime\-type\fR=MIME/TYPE
-Default MIME\-type to be set for objects stored.
-.TP
-\fB\-M\fR, \fB\-\-guess\-mime\-type\fR
-Guess MIME\(hytype of files by their extension. Falls
-back to default MIME\(hyType as specified by \fB\-\-mime\-type\fR
-option
-.TP
-\fB\-H\fR, \fB\-\-human\-readable\-sizes\fR
-Print sizes in human readable form.
-.\".TP
-.\"\fB\-u\fR, \fB\-\-show\-uri\fR
-.\"Show complete S3 URI in listings.
-.TP
-\fB\-v\fR, \fB\-\-verbose\fR
-Enable verbose output.
-.TP
-\fB\-d\fR, \fB\-\-debug\fR
-Enable debug output.
-.TP
-\fB\-h\fR, \fB\-\-help\fR
-Show the help message and exit
-.TP
-\fB\-\-version\fR
-Show
-.B s3cmd
-version and exit.
+r"""Releasing into open source should not be done lightly when you are dealing with your
+company’s IP, someone else’s IP, or other people’s IP. It’s OPIPP (like the song, OPP).
+There is typically too much risk to rush something out for purposes of a press release
+or because management wants to say they now do open source. Luffa is a set of tools to
+walk you through what you need to worry about in taking a closed source project into the
+Open Soruce community. Luffa scans a directory tree (source, docs, or whatever you choose),
+and based on a configuration file, scans white listed files for potential issues, and flags
+any potential items that require review by a human. This alone should be able to help you
+gather enough information to get the lawyers off your back, make the boss happy, and get
+you home in time for Dancing With the Stars.
 
-.SH SYNC COMMAND
-One of the most powerful commands of \fIs3cmd\fR is \fBs3cmd sync\fR used for 
-synchronising complete directory trees to or from remote S3 storage. 
-.PP
-Basic usage common in backup scenarios is as simple as:
-.nf
-	s3cmd sync /local/path s3://test-bucket/backup
-.fi
-.PP
-This command will find all files under /local/path directory and copy them 
-to corresponding paths under s3://test-bucket/backup on the remote side.
-For example:
-.nf
-/local/path\fB/file1.ext\fR         ->  s3://test-bucket/backup\fB/file1.ext\fR
-/local/path\fB/dir123/file2.bin\fR  ->  s3://test-bucket/backup\fB/dir123/file2.bin\fR
-.fi
+python ScanReport.py -c=[config file path]
+    Scans through the specified source directory in the config file and generates a report for
+    whitelisted file with line #s related to Licenses, Programmer Names, Company Names, Email Addresses, and
+    Bad Words.  This is currently the only supported mode of execution.
+examples:
 
-To retrieve the files back from S3 use inverted syntax:
-.nf
-	s3cmd sync s3://test-bucket/backup/ /tmp/restore
-.fi
-that will download files:
-.nf
-s3://test-bucket/backup\fB/file1.ext\fR         ->  /tmp/restore\fB/file1.ext\fR       
-s3://test-bucket/backup\fB/dir123/file2.bin\fR  ->  /tmp/restore\fB/dir123/file2.bin\fR
-.fi
+    * python ScanReport.py ../../../../examples/luffaproject.conf
 
-For the purpose of \fB\-\-exclude\fR and \fB\-\-exclude\-from\fR matching the file name 
-\fIalways\fR begins with \fB/\fR (slash) and has the local or remote common part removed.
-For instance in the previous example the file names tested against --exclude list
-will be \fB/\fRfile1.ext and \fB/\fRdir123/file2.bin, that is both with the leading 
-slash regardless whether you specified s3://test-bucket/backup or 
-s3://test-bucket/backup/ (note the trailing slash) on the command line.
+"""
+import sys
+import getopt
+from razortooth.luffa.tools import Scan
 
-Both \fB\-\-exclude\fR and \fB\-\-exclude\-from\fR work with shell-style wildcards (a.k.a. GLOB).
-For a greater flexibility s3cmd provides Regular-expression versions of the two exclude options 
-named \fB\-\-rexclude\fR and \fB\-\-rexclude\-from\fR. 
+class ScanReport:
 
-Run s3cmd with \fB\-\-debug\-syncmatch\fR to get detailed information
-about matching file names against exclude rules.
+    def __init__(self):
+        print "Scanning project"
 
-For example to exclude all files with ".bin" extension with a REGEXP use:
-.PP
-	\-\-rexclude '\.bin$'
-.PP
-to exclude all hidden files and subdirectories (i.e. those whose name begins with dot ".") use GLOB:
-.PP
-	\-\-exclude '/.*'
-.PP
-on the other hand to exclude only hidden files but not hidden subdirectories use REGEXP:
-.PP
-	\-\-rexclude '/\.[^/]*$'
-.PP
-etc...
+    def usage(self):
+        print __doc__
 
-.SH AUTHOR
-Written by Michal Ludvig <michal@logix.cz>
-.SH REPORTING BUGS
-Report bugs to 
-.I s3tools\-general@lists.sourceforge.net
-.SH COPYRIGHT
-Copyright \(co 2007,2008 Michal Ludvig <http://www.logix.cz/michal>
-.br
-This is free software.  You may redistribute copies of it under the terms of
-the GNU General Public License version 2 <http://www.gnu.org/licenses/gpl.html>.
-There is NO WARRANTY, to the extent permitted by law.
-.SH SEE ALSO
-For the most up to date list of options run 
-.B s3cmd \-\-help
-.br
-For more info about usage, examples and other related info visit project homepage at
-.br
-.B http://s3tools.logix.cz
-
+    def main(argv):
+        config = "../../../../examples/luffaproject.conf"
+        try:
+            opts, args = getopt.getopt(argv, "hc:d", ["help", "config="])
+        except getopt.GetoptError:
+            usage()
+            sys.exit(2)
+        for opt, arg in opts:
+            if opt in ("-h", "--help"):
+                usage()
+                sys.exit()
+            elif opt == '-d':
+                global _debug
+                _debug = 1
+            elif opt in ("-c","--config"):
+                config = arg
+        command = "".join(args) # We don't currently need this, but may use it later, putting it here before I forget
+        mainLuffa = Scan.Scan()
+        propsRead = mainLuffa.initEnv(config)
+        if (propsRead > 0):
+            mainLuffa.deepScan(mainLuffa.luffaProjectEnv["project.path.uri"].rstrip())
+        else:
+            print "ERROR: No properties were read.  Go find out why."
+    if __name__ == '__main__':
+      main(sys.argv[1:])
+    else:
+      # This will be executed in case the
+      #    source has been imported as a
+      #    module.
+      print "ERROR: Module should be run as a command line"
+      system.exit(2)
