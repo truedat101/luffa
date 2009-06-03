@@ -53,7 +53,7 @@ examples:
 """
 import sys
 import getopt
-from razortooth.luffa.tools import Scan
+from luffa.tools import Scan
 
 class ScanReport:
 
