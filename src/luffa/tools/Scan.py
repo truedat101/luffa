@@ -205,16 +205,16 @@ class scanTests(unittest.TestCase):
         self.assert_(self.aLuffa.luffaProjectEnv)
         self.assert_(self.aLuffa.luffaProjectEnv.get('project.fullname'))
         print "# of props read=%d" % propsRead
- #   def testDeepScan1(self):
- #       propsRead = self.aLuffa.initEnv("../../../examples/luffaproject.conf")
- #       self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
+    def testDeepScan1(self):
+        propsRead = self.aLuffa.initEnv("../../../examples/luffaproject.conf")
+        self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
 
  #   def testDeepScan2(self):
  #       propsRead = self.aLuffa.initEnv("../../../examples/aspenproject.conf")
  #       self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
-    def testDeepScan3(self):
-        propsRead = self.aLuffa.initEnv("../../../examples/ccnproject.conf")
-        self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
+ #   def testDeepScan3(self):
+ #       propsRead = self.aLuffa.initEnv("../../../examples/ccnproject.conf")
+ #       self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
 
     def testWatchlistNames(self):
         propsRead = self.aLuffa.initEnv("../../../examples/luffaproject.conf")
