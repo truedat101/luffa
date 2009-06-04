@@ -42,13 +42,13 @@ any potential items that require review by a human. This alone should be able to
 gather enough information to get the lawyers off your back, make the boss happy, and get
 you home in time for Dancing With the Stars.
 
-python ScanReport.py -c=[config file path]
+luffax -c [config file path]
     Scans through the specified source directory in the config file and generates a report for
     whitelisted file with line #s related to Licenses, Programmer Names, Company Names, Email Addresses, and
     Bad Words.  This is currently the only supported mode of execution.
 examples:
 
-    * python ScanReport.py ../../../../examples/luffaproject.conf
+    * luffax -c luffaproject.conf
 
 """
 import sys
@@ -60,19 +60,16 @@ class ScanReport:
     def __init__(self):
         print "Scanning project"
 
-    def usage(self):
-        print __doc__
-
     def main(argv):
         config = "../../../../examples/luffaproject.conf"
         try:
             opts, args = getopt.getopt(argv, "hc:d", ["help", "config="])
         except getopt.GetoptError:
-            usage()
+            print __doc__
             sys.exit(2)
         for opt, arg in opts:
             if opt in ("-h", "--help"):
-                usage()
+              	print __doc__
                 sys.exit()
             elif opt == '-d':
                 global _debug

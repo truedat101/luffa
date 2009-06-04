@@ -97,15 +97,17 @@ class Scan:
         return (len(self.luffaLicenseEnv) + len(self.luffaWatchlistEnv) + len(self.luffaProjectEnv) + len(self.luffaReportEnv))
     def deepScan(self, currentPath):
         currentPath = os.path.abspath(currentPath)
+        # XXX DEBUG print "called deepScan(" + currentPath + ")"
         if (os.path.isdir(currentPath)):
             files = os.listdir(currentPath)
             for f in files:
-                print files
+                # XXX Debug print files
                 self.deepScan(os.path.join(currentPath, f))
         else:
             # XXX TODO Make sure this section handles double byte character encodings
             # XXX TODO load the regular expressions once, not each file
             extList = self.luffaProjectEnv.get("project.source.ext.whitelist")
+
             for ext in extList.split(","): # Convert this to a regex, more efficient
                 if (currentPath.endswith(ext)): # XXX TODO FIX this to handle upper case, also, this is wrong since it should check all file types in one step
                     print "--------->initiating scan on %s, matches whitelist extension=%s" % (currentPath, ext)
@@ -116,10 +118,11 @@ class Scan:
                     companiesPattern = self.luffaWatchlistEnv.get('watchlist.companies').rstrip()
                     badwordsPattern = self.luffaWatchlistEnv.get('watchlist.badwords').rstrip()
                     opensourceLicensePattern = self.luffaLicenseEnv.get('license.opensource').rstrip()
-                    print "Loaded Names Scan (pattern=%s)" % (namesPattern)
-                    print "Loaded Companies Scan (pattern=%s)" % (companiesPattern)
-                    print "Loaded Badwords Scan (pattern=%s)" % (badwordsPattern)
-                    print "Loaded License Scan (pattern=%s)" % (opensourceLicensePattern)
+                    # XXX DEBUG
+                    # print "Loaded Names Scan (pattern=%s)" % (namesPattern)
+                    # print "Loaded Companies Scan (pattern=%s)" % (companiesPattern)
+                    # print "Loaded Badwords Scan (pattern=%s)" % (badwordsPattern)
+                    # print "Loaded License Scan (pattern=%s)" % (opensourceLicensePattern)
                     for line in afile:
                         i+=1
                         # Scan for watchlist.names
@@ -149,8 +152,8 @@ class Scan:
                         result = p.findall(line)
                         if (len(result) > 0):
                             print "Flag potential Opensource License reference on line %d" %i + ", found following items:",result[0:len(result)]
-                else:
-                    print "skipping file non-whitelist file %s" % (currentPath) # Without the regex matching, this will print extra times for each file type not matched
+                # else:
+                    # XXX DEBUG print "skipping file non-whitelist file %s" % (currentPath) # Without the regex matching, this will print extra times for each file type not matched
     def emailScan(self, textString):
         pattern = self.luffaWatchlistEnv.get('watchlist.emailaddresses').rstrip()
         # print "Loaded email pattern from watchlist.emailaddress %s of length=%d" % (pattern, len(pattern))
@@ -163,8 +166,10 @@ class Scan:
         p = re.compile(r"" + pattern + "", re.IGNORECASE)
         matches = p.findall(textString)
         return matches
+    # XXX If we don't need main, we don't need this
     def usage(self):
         print __doc__
+    # XXX This gets ignored...., so remove it
     def main(argv):
         try:
             opts, args = getopt.getopt(argv, "hc:d", ["help", "config="])
@@ -200,9 +205,17 @@ class scanTests(unittest.TestCase):
         self.assert_(self.aLuffa.luffaProjectEnv)
         self.assert_(self.aLuffa.luffaProjectEnv.get('project.fullname'))
         print "# of props read=%d" % propsRead
-    def testDeepScan1(self):
-        propsRead = self.aLuffa.initEnv("../../../examples/luffaproject.conf")
+ #   def testDeepScan1(self):
+ #       propsRead = self.aLuffa.initEnv("../../../examples/luffaproject.conf")
+ #       self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
+
+ #   def testDeepScan2(self):
+ #       propsRead = self.aLuffa.initEnv("../../../examples/aspenproject.conf")
+ #       self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
+    def testDeepScan3(self):
+        propsRead = self.aLuffa.initEnv("../../../examples/ccnproject.conf")
         self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
+
     def testWatchlistNames(self):
         propsRead = self.aLuffa.initEnv("../../../examples/luffaproject.conf")
         pattern = self.aLuffa.luffaWatchlistEnv.get('watchlist.names').rstrip()
