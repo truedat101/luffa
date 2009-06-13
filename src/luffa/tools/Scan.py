@@ -253,4 +253,6 @@ class scanTests(unittest.TestCase):
         print "tearing down"
 # NOTE: This one overrides any calls into main, so unittest will always get run!  XXX
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main() # From within the IDE or from the shell, we'll run tests automatically
+else:
+    pass # Module Imported by another module, which is what we want mostly
