@@ -60,7 +60,20 @@ import getopt
 
 # Pattern based on fine work of http://www.regular-expressions.info/email.html, RFC 2822, and your local Audi Dealer
 # I could write these, but we'd have a leaky sieve
-emailRegexPattern = r"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"
+emailRegexPattern = r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+# XXX This needs work....
+# domainnameRegexPattern = r"(?:[a-z0-9!#$%&'*+/=?^@_`{|}~]+)+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~]+)?(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~]+)"
+# Below, inspired by # This one is a combo of http://tools.devshed.com/webmaster-tools/regex-extractor/ and the URL above
+domainnameRegexPattern = r"[A-Z0-9][A-Z0-9.-]{0,61}[A-Z0-9]\.(?:com|org|net|gov|mil|biz|info|mobi|name|aero|jobs|museum)"
+
+#  [-a-z0-9]+(\.[-a-z0-9]+)*\.(com|edu|info)  http://regex.info/listing.cgi?ed=2&p=all
+# need ip v6
+# Great inspiration here: http://www.regexlib.com/DisplayPatterns.aspx?cattabindex=1&categoryId=2
+# IPV6 ^((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))$
+# IPV4 SIMPLE [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}
+# some better IPV6 regexes: http://forums.dartware.com/viewtopic.php?t=452
+# XXX I suck at these, by the way....
+ipaddressRegexPattern = r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"
 
 class Scan:
     confFile = 0
@@ -114,10 +127,15 @@ class Scan:
                     afile = open(currentPath, 'rU')
                     i = 0
                     #  Load these during init?
+                    #  Also, not really robust...if an env variable is incorrect, you have a none type and the rstrip will fail
                     namesPattern = self.luffaWatchlistEnv.get('watchlist.names').rstrip()
                     companiesPattern = self.luffaWatchlistEnv.get('watchlist.companies').rstrip()
                     badwordsPattern = self.luffaWatchlistEnv.get('watchlist.badwords').rstrip()
                     opensourceLicensePattern = self.luffaLicenseEnv.get('license.opensource').rstrip()
+                    hostnamesPattern = self.luffaWatchlistEnv.get('watchlist.hostnames').rstrip()
+                    ipaddressesPattern = self.luffaWatchlistEnv.get('watchlist.ipaddresses').rstrip()
+                    emailPattern = self.luffaWatchlistEnv.get('watchlist.emailaddresses').rstrip()
+
                     # XXX DEBUG
                     # print "Loaded Names Scan (pattern=%s)" % (namesPattern)
                     # print "Loaded Companies Scan (pattern=%s)" % (companiesPattern)
@@ -126,6 +144,7 @@ class Scan:
                     for line in afile:
                         i+=1
                         # Scan for watchlist.names
+                        # XXX Do some big refactoring here
                         p = re.compile(r"" + namesPattern + "", re.IGNORECASE)
                         result = p.findall(line)
                         if (len(result) > 0):
@@ -143,9 +162,19 @@ class Scan:
                             print "Flag potential Badword issue on line %d" %i + ", found following items:",result[0:len(result)]
 
                         # Scan for watchlist.emailaddresses
-                        result = self.emailScan(line)
+                        result = self.generalPatternScan(line, emailPattern, emailRegexPattern)
                         if (len(result) > 0):
                             print "Flag potential Emails issue on line %d" %i + ", found following items:",result[0:len(result)]
+
+#                        # Scan for watchlist.hostnames
+                        result = self.generalPatternScan(line, hostnamesPattern, domainnameRegexPattern)
+                        if (len(result) > 0):
+                            print "Flag potential Hostname issue on line %d" %i + ", found following items:",result[0:len(result)]
+
+#                        # Scan for watchlist.ipaddresses
+                        result = self.generalPatternScan(line, ipaddressesPattern, ipaddressRegexPattern)
+                        if (len(result) > 0):
+                            print "Flag potential IP Address issue on line %d" %i + ", found following items:",result[0:len(result)]
 
                         # Scan for license.opensource
                         p = re.compile(r"" + opensourceLicensePattern + "", re.IGNORECASE)
@@ -154,15 +183,11 @@ class Scan:
                             print "Flag potential Opensource License reference on line %d" %i + ", found following items:",result[0:len(result)]
                 # else:
                     # XXX DEBUG print "skipping file non-whitelist file %s" % (currentPath) # Without the regex matching, this will print extra times for each file type not matched
-    def emailScan(self, textString):
-        pattern = self.luffaWatchlistEnv.get('watchlist.emailaddresses').rstrip()
+
+    def generalPatternScan(self, textString, pattern, wildcard):
         # print "Loaded email pattern from watchlist.emailaddress %s of length=%d" % (pattern, len(pattern))
         if ((pattern.find("*",0) == 0) and (len(pattern) == 1)):
-            pattern = emailRegexPattern
-        # XXX TODO: Move this into init
-        # else:
-        #    print "Using a custom regex pattern for email"
-        # print "loaded watchlist.emailaddresses pattern = %s" % pattern
+            pattern = wildcard
         p = re.compile(r"" + pattern + "", re.IGNORECASE)
         matches = p.findall(textString)
         return matches
@@ -202,20 +227,13 @@ class scanTests(unittest.TestCase):
         print os.path.abspath('.')
         propsRead = self.aLuffa.initEnv("../../../examples/luffaproject.conf")
         self.assert_(propsRead > 0)
+        self.assert_(propsRead == 13)
         self.assert_(self.aLuffa.luffaProjectEnv)
         self.assert_(self.aLuffa.luffaProjectEnv.get('project.fullname'))
         print "# of props read=%d" % propsRead
     def testDeepScan1(self):
         propsRead = self.aLuffa.initEnv("../../../examples/luffaproject.conf")
         self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
-
- #   def testDeepScan2(self):
- #       propsRead = self.aLuffa.initEnv("../../../examples/aspenproject.conf")
- #       self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
- #   def testDeepScan3(self):
- #       propsRead = self.aLuffa.initEnv("../../../examples/ccnproject.conf")
- #       self.aLuffa.deepScan(str(self.aLuffa.luffaProjectEnv["project.path.uri"]).rstrip()) # Watch the newlines.  Why?
-
     def testWatchlistNames(self):
         propsRead = self.aLuffa.initEnv("../../../examples/luffaproject.conf")
         pattern = self.aLuffa.luffaWatchlistEnv.get('watchlist.names').rstrip()
@@ -243,9 +261,20 @@ class scanTests(unittest.TestCase):
         self.assert_(result1 > 0)
         print result1
         self.assert_(len(result1) == 3)
-    def testEmailScan(self):
+    def testGeneralPatternScan(self):
         propsRead = self.aLuffa.initEnv("../../../examples/luffaproject.conf")
-        result1 = self.aLuffa.emailScan("Email me at dkords1@go.com if you want to reach my spam bucket.  If you want to try reaching me at dkords at dot com, that won't work, and please never try me at dk.or@d.s or dk@o.rds")
+        # Test for emails
+        result1 = self.aLuffa.generalPatternScan("Email me at dkords1@go.com if you want to reach my spam bucket.  If you want to try reaching me at dkords at dot com, that won't work, and please never try me at dk.or@d.s or dk@o.rds", self.aLuffa.luffaWatchlistEnv.get('watchlist.emailaddresses').rstrip(), emailRegexPattern)
+        self.assert_(result1 > 0)
+        print result1
+        self.assert_(len(result1) == 3)
+        # Test for hostnames
+        result1 = self.aLuffa.generalPatternScan("WE use wikipedia.com for lookup of real information, and www.google.com for lookup of bogus information.  I like to think that any site abc.123.org should be permitted", self.aLuffa.luffaWatchlistEnv.get('watchlist.hostnames').rstrip(), domainnameRegexPattern)
+        self.assert_(result1 > 0)
+        print result1
+        self.assert_(len(result1) == 3)
+        # Test for IP Addresses
+        result1 = self.aLuffa.generalPatternScan("If you use localhost, 127.0.0.1, or change your subnet to 255.255.255.0, then be careful not to mix up the network with your default gateway at 192.168.0.1", self.aLuffa.luffaWatchlistEnv.get('watchlist.ipaddresses').rstrip(), ipaddressRegexPattern)
         self.assert_(result1 > 0)
         print result1
         self.assert_(len(result1) == 3)
@@ -253,4 +282,6 @@ class scanTests(unittest.TestCase):
         print "tearing down"
 # NOTE: This one overrides any calls into main, so unittest will always get run!  XXX
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main() # From within the IDE or from the shell, we'll run tests automatically
+else:
+    pass # Module Imported by another module, which is what we want mostly
